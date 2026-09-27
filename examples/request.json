@@ -1,0 +1,3 @@
+{
+  "query": "Build a small FastAPI service with PostgreSQL, Docker Compose, structured logs, tests, and a production deployment checklist. Keep it understandable for an intermediate Python developer."
+}

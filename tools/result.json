@@ -1,0 +1,39 @@
+{
+  "user_role": "Backend developer",
+  "expertise_level": "Intermediate",
+  "original_domain": "Software & technology",
+  "area": "Backend web services",
+  "sub_domain": "Local planning agent",
+  "domain_summary": "Build and validate a local-first planning service.",
+  "technical_context": "Python, FastAPI, Ollama",
+  "success_criteria": "A reproducible local service returns a structured, validated plan.",
+  "gaps": ["Define a repeatable evaluation set for semantic quality."],
+  "validation_warnings": [],
+  "epics": [
+    {
+      "title": "Planner foundation",
+      "description": "Establish the local model boundary and public API contract.",
+      "stories": [
+        {
+          "id": "E1-S1",
+          "title": "Local model transport",
+          "description": "Connect the planner to a configurable Ollama endpoint.",
+          "depends_on": [],
+          "tasks": [
+            {
+              "id": "E1-S1-T1",
+              "title": "Configure Ollama",
+              "description": "Read model, host, timeout, and concurrency from environment variables.",
+              "depends_on": [],
+              "sub_tasks": [
+                {"title": "Define settings", "description": "Add validated runtime settings."},
+                {"title": "Wire client", "description": "Use settings in the async Ollama client."},
+                {"title": "Verify health", "description": "Expose readiness without generating a plan."}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

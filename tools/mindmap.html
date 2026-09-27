@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Plan Mind Map</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: rgba(15, 23, 42, 0.78);
+      --panel-border: rgba(148, 163, 184, 0.25);
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --link: rgba(125, 211, 252, 0.5);
+      --accent: #38bdf8;
+      --node-epic: #0f172a;
+      --node-story: #111827;
+      --node-task: #1f2937;
+      --node-subtask: #162032;
+      --shadow: 0 10px 30px rgba(2, 6, 23, 0.55);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(56, 189, 248, 0.15), transparent 36%),
+        radial-gradient(circle at 82% 80%, rgba(59, 130, 246, 0.14), transparent 42%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      position: fixed;
+      z-index: 20;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--panel-border);
+      background: var(--panel);
+      border-radius: 12px;
+      backdrop-filter: blur(6px);
+      box-shadow: var(--shadow);
+    }
+
+    .title {
+      font-size: 14px;
+      font-weight: 650;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+    }
+
+    .status {
+      font-size: 12px;
+      color: var(--muted);
+      margin-right: auto;
+      margin-left: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .btn {
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      color: #dbeafe;
+      background: rgba(14, 116, 144, 0.35);
+      border-radius: 9px;
+      cursor: pointer;
+      padding: 7px 10px;
+      font-size: 12px;
+      transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      background: rgba(14, 116, 144, 0.55);
+      border-color: rgba(56, 189, 248, 0.8);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    /* ── Viewport & Stage ── */
+    .viewport {
+      position: absolute;
+      inset: 0;
+      padding-top: 68px;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .viewport.dragging {
+      cursor: grabbing;
+    }
+
+    .viewport.zoom-selecting {
+      cursor: crosshair;
+    }
+
+    .stage {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: 0 0;
+    }
+
+    #links {
+      position: absolute;
+      inset: 0;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    #nodes {
+      position: absolute;
+      inset: 0;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    /* ── Nodes ── */
+    .node {
+      position: absolute;
+      min-width: 660px;
+      max-width: 660px;
+      pointer-events: auto;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transform: translate(-50%, -50%) scale(0.92);
+      opacity: 0;
+      animation: nodeIn 430ms cubic-bezier(.19, .89, .32, 1.28) forwards;
+    }
+
+    .node.project {
+      background: linear-gradient(180deg, #0d1b2e, #0b1020);
+    }
+
+    .node.epic {
+      background: linear-gradient(180deg, #0b1227, var(--node-epic));
+    }
+
+    .node.story {
+      background: linear-gradient(180deg, #111b34, var(--node-story));
+    }
+
+    .node.task {
+      background: linear-gradient(180deg, #1a2538, var(--node-task));
+    }
+
+    .node.subtask {
+      background: linear-gradient(180deg, #1c2d40, var(--node-subtask));
+      border-color: rgba(99, 179, 237, 0.2);
+    }
+
+    .node.task .head,
+    .node.subtask .head {
+      padding: 10px 15px 8px;
+    }
+
+    .node.task .label,
+    .node.subtask .label {
+      padding: 14px 15px 15px;
+      line-height: 1.45;
+    }
+
+    .node:hover {
+      border-color: rgba(125, 211, 252, 0.7);
+      transform: translate(-50%, -50%) scale(1.02);
+      transition: transform .18s ease, border-color .18s ease;
+    }
+
+    /* ── Hi-Res overrides ── */
+    .hi-res .node {
+      min-width: 230px;
+      max-width: 520px;
+      border-width: 1.2px;
+    }
+
+    .hi-res .head {
+      font-size: 13px;
+      padding: 11px 16px 9px;
+      letter-spacing: 1.1px;
+    }
+
+    .hi-res .label {
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 14px 16px 15px;
+    }
+
+    .hi-res .label.small {
+      font-size: 13px;
+      color: #d8dee9;
+    }
+
+    .hi-res .node.task .head,
+    .hi-res .node.subtask .head {
+      padding: 12px 17px 10px;
+    }
+
+    .hi-res .node.task .label,
+    .hi-res .node.subtask .label {
+      padding: 16px 17px 17px;
+      line-height: 1.52;
+    }
+
+    .hi-res .desc {
+      font-size: 12px;
+      padding: 0 16px 13px;
+      padding-top: 8px;
+    }
+
+    /* ── Node internals ── */
+    .head {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #67e8f9;
+      padding: 10px 16px 9px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(15, 23, 42, 0.6);
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .node.epic .head {
+      border-left: 3px solid #38bdf8;
+    }
+
+    .node.story .head {
+      border-left: 3px solid #818cf8;
+    }
+
+    .node.task .head {
+      border-left: 3px solid #34d399;
+    }
+
+    .node.subtask .head {
+      border-left: 3px solid #67e8f9;
+    }
+
+    .node.subtask .head {
+      color: #a5f3fc;
+      letter-spacing: 0.8px;
+      padding: 8px 14px 7px;
+    }
+
+    .label {
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 12px 16px 12px;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .label.small {
+      font-size: 12px;
+      color: #d1d5db;
+      padding: 10px 14px 10px;
+    }
+
+    .desc {
+      font-size: 11px;
+      color: var(--muted);
+      padding: 0 16px 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border-top: 1px solid rgba(148, 163, 184, 0.1);
+      padding-top: 8px;
+    }
+
+
+    /* ── Metadata badges ── */
+    .meta-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      padding: 8px 14px 12px;
+      border-top: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+
+    .meta-badge {
+      font-size: 10px;
+      padding: 3px 7px;
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(30, 58, 138, 0.25);
+      color: #93c5fd;
+      white-space: nowrap;
+    }
+
+    /* ── Collapsed state ── */
+    .node.collapsed>.head {
+      color: #f0f9ff;
+      background: rgba(8, 47, 73, 0.72);
+    }
+
+    /* ── Visibility / animation states ── */
+    .node-hidden {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      transition: opacity 180ms ease;
+    }
+
+    .node-folding {
+      pointer-events: none !important;
+      animation: foldIntoParent 460ms cubic-bezier(.22, .76, .2, 1) forwards !important;
+    }
+
+    .node-unfolding {
+      pointer-events: none !important;
+      animation: unfoldFromParent 420ms cubic-bezier(.2, .9, .22, 1) forwards !important;
+    }
+
+    /* ── Links ── */
+    .link {
+      fill: none;
+      stroke: var(--link);
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-dasharray: 5 8;
+      opacity: 0;
+      animation-name: flow, fadeIn;
+      animation-duration: 1.35s, 450ms;
+      animation-iteration-count: infinite, 1;
+      animation-fill-mode: none, forwards;
+    }
+
+    .link.subtask-link {
+      stroke: rgba(99, 179, 237, 0.4);
+      stroke-width: 1.2;
+      stroke-dasharray: 3 7;
+    }
+
+    .link-hidden {
+      opacity: 0 !important;
+      animation: none !important;
+      transition: opacity 160ms ease;
+    }
+
+    .link-fading-out {
+      animation: linkFadeOut 280ms ease forwards !important;
+    }
+
+    .link-fading-in {
+      animation: linkFadeIn 320ms ease forwards !important;
+    }
+
+    /* ── Hint & Zoom box ── */
+    .hint {
+      position: fixed;
+      right: 14px;
+      bottom: 12px;
+      font-size: 11px;
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.68);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 7px 9px;
+      z-index: 30;
+    }
+
+    .zoom-box {
+      position: fixed;
+      z-index: 35;
+      border: 1px solid rgba(56, 189, 248, 0.95);
+      background: rgba(56, 189, 248, 0.14);
+      box-shadow: inset 0 0 0 1px rgba(186, 230, 253, 0.28);
+      border-radius: 4px;
+      pointer-events: none;
+      display: none;
+    }
+
+    /* ── Logger panel ── */
+    #loggerPanel {
+      display: none;
+      position: fixed;
+      left: 14px;
+      right: 14px;
+      bottom: 12px;
+      max-height: 180px;
+      overflow: auto;
+      z-index: 40;
+      margin: 0;
+      padding: 10px 12px;
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      background: rgba(2, 6, 23, 0.86);
+      color: #cbd5e1;
+      font-size: 11px;
+      line-height: 1.35;
+      white-space: pre-wrap;
+    }
+
+    /* ── Keyframes ── */
+    @keyframes flow {
+      to {
+        stroke-dashoffset: -26;
+      }
+    }
+
+    @keyframes nodeIn {
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes foldIntoParent {
+      to {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--fold-x, 0px)), calc(-50% + var(--fold-y, 0px))) scale(0.24);
+      }
+    }
+
+    @keyframes unfoldFromParent {
+      from {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--fold-x, 0px)), calc(-50% + var(--fold-y, 0px))) scale(0.24);
+      }
+
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    @keyframes linkFadeOut {
+      to {
+        opacity: 0;
+      }
+    }
+
+    @keyframes linkFadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="title">Project Plan Mind Map</div>
+    <div class="status" id="status">Loading local result.json...</div>
+    <button class="btn" id="uploadBtn">Load JSON File</button>
+    <button class="btn" id="hiResBtn">Hi-Res: Off</button>
+    <button class="btn" id="logBtn">Logger: Off</button>
+    <button class="btn" id="fitBtn">Fit View</button>
+    <span
+      style="font-size:11px;color:#93c5fd;border:1px solid rgba(59,130,246,.45);background:rgba(30,58,138,.25);padding:6px 8px;border-radius:8px;white-space:nowrap;"
+      title="Navigation: Left-drag = Pan, Mouse wheel = Zoom, Right-drag or Shift+Left-drag = Zoom to selected area.">Hint:
+      Right-drag (or Shift+drag) = Zoom box</span>
+    <input type="file" id="fileInput" accept=".json,application/json" />
+  </div>
+
+  <div class="viewport" id="viewport">
+    <div class="stage" id="stage">
+      <svg id="links"></svg>
+      <div id="nodes"></div>
+    </div>
+  </div>
+
+  <div class="hint">Drag to pan | Mouse wheel to zoom | Right-drag (or Shift+drag) to zoom area</div>
+  <div id="zoomBox" class="zoom-box"></div>
+  <pre id="loggerPanel"></pre>
+
+  <script>
+    (function () {
+      const viewport = document.getElementById("viewport");
+      const stage = document.getElementById("stage");
+      const linksSvg = document.getElementById("links");
+      const nodesLayer = document.getElementById("nodes");
+      const statusEl = document.getElementById("status");
+      const fileInput = document.getElementById("fileInput");
+      const uploadBtn = document.getElementById("uploadBtn");
+      const hiResBtn = document.getElementById("hiResBtn");
+      const logBtn = document.getElementById("logBtn");
+      const fitBtn = document.getElementById("fitBtn");
+      const loggerPanel = document.getElementById("loggerPanel");
+      const zoomBox = document.getElementById("zoomBox");
+
+      const state = {
+        x: 0, y: 0, scale: 1,
+        dragging: false, zoomSelecting: false,
+        dragStartX: 0, dragStartY: 0,
+        zoomStartX: 0, zoomStartY: 0,
+        zoomCurrentX: 0, zoomCurrentY: 0,
+        originX: 0, originY: 0,
+        data: null, graph: null, model: null,
+        hiRes: false, maxZoom: 2.1, fitCap: 1.35,
+        animating: false, lastToggleKey: "", lastToggleAt: 0,
+        loggerEnabled: false, logLines: []
+      };
+
+      // ── Utilities ────────────────────────────────────────────────────────────────
+
+      function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+      function updateTransform() {
+        const x = Math.round(state.x * 10) / 10;
+        const y = Math.round(state.y * 10) / 10;
+        const s = Math.round(state.scale * 1000) / 1000;
+        stage.style.transform = "translate(" + x + "px, " + y + "px) scale(" + s + ")";
+      }
+
+      function setStatus(text) { statusEl.textContent = text; }
+
+      function logEvent(tag, details) {
+        if (!state.loggerEnabled) return;
+        const ts = new Date();
+        const stamp =
+          String(ts.getHours()).padStart(2, "0") + ":" +
+          String(ts.getMinutes()).padStart(2, "0") + ":" +
+          String(ts.getSeconds()).padStart(2, "0") + "." +
+          String(ts.getMilliseconds()).padStart(3, "0");
+        const line = stamp + " | " + tag + (details ? " | " + details : "");
+        state.logLines.push(line);
+        if (state.logLines.length > 80) state.logLines.shift();
+        loggerPanel.textContent = state.logLines.join("\n");
+        loggerPanel.scrollTop = loggerPanel.scrollHeight;
+      }
+
+      // ── Zoom box ─────────────────────────────────────────────────────────────────
+
+      function updateZoomBox() {
+        const x1 = Math.min(state.zoomStartX, state.zoomCurrentX);
+        const y1 = Math.min(state.zoomStartY, state.zoomCurrentY);
+        const x2 = Math.max(state.zoomStartX, state.zoomCurrentX);
+        const y2 = Math.max(state.zoomStartY, state.zoomCurrentY);
+        zoomBox.style.left = x1 + "px";
+        zoomBox.style.top = y1 + "px";
+        zoomBox.style.width = Math.max(1, x2 - x1) + "px";
+        zoomBox.style.height = Math.max(1, y2 - y1) + "px";
+      }
+
+      function finalizeZoomSelection() {
+        const rect = viewport.getBoundingClientRect();
+        const x1 = Math.min(state.zoomStartX, state.zoomCurrentX);
+        const y1 = Math.min(state.zoomStartY, state.zoomCurrentY);
+        const x2 = Math.max(state.zoomStartX, state.zoomCurrentX);
+        const y2 = Math.max(state.zoomStartY, state.zoomCurrentY);
+        if ((x2 - x1) < 12 || (y2 - y1) < 12) return;
+
+        const mapX1 = (x1 - rect.left - state.x) / state.scale;
+        const mapY1 = (y1 - rect.top - state.y) / state.scale;
+        const mapX2 = (x2 - rect.left - state.x) / state.scale;
+        const mapY2 = (y2 - rect.top - state.y) / state.scale;
+        const mapW = Math.max(1, mapX2 - mapX1);
+        const mapH = Math.max(1, mapY2 - mapY1);
+
+        const targetScale = clamp(
+          Math.min(viewport.clientWidth / mapW, viewport.clientHeight / mapH) * 0.96,
+          0.2, state.maxZoom
+        );
+        state.scale = targetScale;
+        state.x = -mapX1 * targetScale + (viewport.clientWidth - mapW * targetScale) / 2;
+        state.y = -mapY1 * targetScale + (viewport.clientHeight - mapH * targetScale) / 2;
+        updateTransform();
+      }
+
+      // ── JSON parsing ─────────────────────────────────────────────────────────────
+
+      function parseData(input) {
+        const rawEpics = input.Epics || input.epics;
+        if (!Array.isArray(rawEpics)) {
+          throw new Error("Invalid JSON: missing epics array.");
+        }
+
+        const epics = rawEpics.map(function (e) {
+          return {
+            title: e.title || e.epic_name || "Epic",
+            description: e.description || "",
+            stories: Array.isArray(e.stories) ? e.stories.map(function (s) {
+              return {
+                title: s.title || s.story_name || "Story",
+                description: s.description || "",
+                tasks: Array.isArray(s.tasks) ? s.tasks.map(function (t) {
+                  const subTasks = Array.isArray(t.sub_tasks)
+                    ? t.sub_tasks.map(function (st) {
+                      return { title: st.title || "Sub-task", description: st.description || "" };
+                    })
+                    : Array.isArray(t.subtasks)
+                      ? t.subtasks.map(function (st) {
+                        return { title: String(st), description: "" };
+                      })
+                      : [];
+                  return {
+                    title: t.title || t.task_name || "Task",
+                    description: t.description || "",
+                    sub_tasks: subTasks
+                  };
+                }) : []
+              };
+            }) : []
+          };
+        });
+
+        const skipKeys = new Set(["Epics", "epics", "Project"]);
+        const meta = {};
+        Object.keys(input).forEach(function (k) {
+          if (!skipKeys.has(k)) meta[k] = input[k];
+        });
+
+        const projectText = String(
+          input.Project || input.sub_domain || input.area || "Project Plan"
+        ).trim();
+
+        return { projectText: projectText, epics: epics, meta: meta };
+      }
+
+      // ── DOM node builders ────────────────────────────────────────────────────────
+
+      function createNode(type, label, description, x, y, delayMs, tiny) {
+        const node = document.createElement("div");
+        node.className = "node " + type;
+        node.style.left = x + "px";
+        node.style.top = y + "px";
+        node.style.animationDelay = delayMs + "ms";
+
+        const h = document.createElement("div");
+        h.className = "head";
+        h.textContent = type === "subtask" ? "sub-task" : type;
+
+        const l = document.createElement("div");
+        l.className = "label" + (tiny ? " small" : "");
+        l.textContent = label;
+
+        node.appendChild(h);
+        node.appendChild(l);
+
+        if (description) {
+          const d = document.createElement("div");
+          d.className = "desc";
+          d.textContent = description;
+          node.appendChild(d);
+        }
+
+        nodesLayer.appendChild(node);
+        return node;
+      }
+
+      function createProjectNode(label, meta, x, y) {
+        const node = document.createElement("div");
+        node.className = "node project";
+        node.style.left = x + "px";
+        node.style.top = y + "px";
+        node.style.animationDelay = "0ms";
+
+        const h = document.createElement("div");
+        h.className = "head";
+        h.textContent = "project";
+        node.appendChild(h);
+
+        const l = document.createElement("div");
+        l.className = "label";
+        l.textContent = label;
+        node.appendChild(l);
+
+        const metaKeys = Object.keys(meta || {});
+        if (metaKeys.length > 0) {
+          const strip = document.createElement("div");
+          strip.className = "meta-strip";
+          metaKeys.forEach(function (k) {
+            const badge = document.createElement("span");
+            badge.className = "meta-badge";
+            badge.textContent = k.replace(/_/g, " ") + ": " + String(meta[k]);
+            strip.appendChild(badge);
+          });
+          node.appendChild(strip);
+        }
+
+        nodesLayer.appendChild(node);
+        return node;
+      }
+
+      // ── SVG links ────────────────────────────────────────────────────────────────
+
+      function buildCurvePath(x1, y1, x2, y2) {
+        const dx = Math.abs(x2 - x1) * 0.45 + 50;
+        return "M " + x1 + " " + y1 +
+          " C " + (x1 + dx) + " " + y1 +
+          ", " + (x2 - dx) + " " + y2 +
+          ", " + x2 + " " + y2;
+      }
+
+      function addLink(delayMs, extraClass) {
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", "");
+        path.setAttribute("class", "link" + (extraClass ? " " + extraClass : ""));
+        path.style.animationDelay = "0ms, " + delayMs + "ms";
+        linksSvg.appendChild(path);
+        return path;
+      }
+
+      function rerouteLinks() {
+        if (!state.graph) return;
+        const map = state.graph.nodeMap;
+        state.graph.links.forEach(function (edge) {
+          const fromNode = map.get(edge.from);
+          const toNode = map.get(edge.to);
+          if (!fromNode || !toNode) return;
+          const sourceX = parseFloat(fromNode.style.left) + fromNode.offsetWidth / 2 - 2;
+          const targetX = parseFloat(toNode.style.left) - toNode.offsetWidth / 2 + 2;
+          const sourceY = parseFloat(fromNode.style.top);
+          const targetY = parseFloat(toNode.style.top);
+          edge.el.setAttribute("d", buildCurvePath(sourceX, sourceY, targetX, targetY));
+        });
+      }
+
+      // ── Graph helpers ────────────────────────────────────────────────────────────
+
+      function branchKey(type, indexPath) { return type + ":" + indexPath; }
+
+      function computeHiddenSet() {
+        const hidden = new Set();
+        if (!state.graph) return hidden;
+        const collapsed = state.graph.collapsed;
+        const children = state.graph.children;
+        const stack = [];
+        collapsed.forEach(function (key) {
+          (children.get(key) || []).forEach(function (k) { stack.push(k); });
+        });
+        while (stack.length) {
+          const cur = stack.pop();
+          if (hidden.has(cur)) continue;
+          hidden.add(cur);
+          (children.get(cur) || []).forEach(function (k) { stack.push(k); });
+        }
+        return hidden;
+      }
+
+      function applyVisibility() {
+        if (!state.graph) return;
+        const hidden = computeHiddenSet();
+        state.graph.nodes.forEach(function (item) {
+          item.el.classList.toggle("node-hidden", hidden.has(item.key));
+          item.el.classList.toggle("collapsed", state.graph.collapsed.has(item.key));
+        });
+        state.graph.links.forEach(function (link) {
+          const hide = hidden.has(link.to) || hidden.has(link.from) || state.graph.collapsed.has(link.from);
+          link.el.classList.toggle("link-hidden", hide);
+        });
+      }
+
+      function collectDescendantsWithDepth(startKey) {
+        if (!state.graph) return [];
+        const results = [];
+        const stack = [{ key: startKey, depth: 0 }];
+        const seen = new Set([startKey]);
+        while (stack.length) {
+          const cur = stack.pop();
+          const kids = state.graph.children.get(cur.key) || [];
+          kids.forEach(function (kid) {
+            if (seen.has(kid)) return;
+            seen.add(kid);
+            const entry = { key: kid, depth: cur.depth + 1 };
+            results.push(entry);
+            stack.push(entry);
+          });
+        }
+        return results;
+      }
+
+      // ── Branch toggle animation ──────────────────────────────────────────────────
+
+      function animateBranchToggle(clickedKey, collapsing) {
+        if (!state.graph || state.animating) return;
+        const clickedEl = state.graph.nodeMap.get(clickedKey);
+        if (!clickedEl) return;
+        logEvent("toggle:start", clickedKey + " collapse=" + String(collapsing));
+
+        state.animating = true;
+        const beforeHidden = computeHiddenSet();
+        const descendants = collectDescendantsWithDepth(clickedKey);
+        const clickedX = parseFloat(clickedEl.style.left);
+        const clickedY = parseFloat(clickedEl.style.top);
+
+        function cleanupAnimations() {
+          state.graph.nodes.forEach(function (item) {
+            item.el.classList.remove("node-folding", "node-unfolding");
+            item.el.style.removeProperty("--fold-x");
+            item.el.style.removeProperty("--fold-y");
+          });
+          state.graph.links.forEach(function (link) {
+            link.el.classList.remove("link-fading-in", "link-fading-out");
+          });
+        }
+
+        if (collapsing) {
+          const toAnimate = descendants.filter(function (d) { return !beforeHidden.has(d.key); });
+          toAnimate.forEach(function (d) {
+            const el = state.graph.nodeMap.get(d.key);
+            if (!el) return;
+            const nx = parseFloat(el.style.left);
+            const ny = parseFloat(el.style.top);
+            el.style.setProperty("--fold-x", (clickedX - nx) + "px");
+            el.style.setProperty("--fold-y", (clickedY - ny) + "px");
+            el.classList.add("node-folding");
+          });
+          state.graph.links.forEach(function (link) {
+            const isAffected = toAnimate.some(function (d) {
+              return d.key === link.from || d.key === link.to;
+            });
+            if (isAffected) link.el.classList.add("link-fading-out");
+          });
+
+          setTimeout(function () {
+            cleanupAnimations();
+            state.graph.collapsed.add(clickedKey);
+            applyVisibility();
+            rerouteLinks();
+            state.animating = false;
+            logEvent("toggle:done", clickedKey + " collapsed");
+          }, 500);
+
+        } else {
+          // expand: update collapse state first
+          state.graph.collapsed.delete(clickedKey);
+
+          const afterHidden = computeHiddenSet();
+          const nowVisible = descendants.filter(function (d) { return !afterHidden.has(d.key); });
+
+          // Set up animation start position BEFORE removing node-hidden
+          nowVisible.forEach(function (d) {
+            const el = state.graph.nodeMap.get(d.key);
+            if (!el) return;
+            const nx = parseFloat(el.style.left);
+            const ny = parseFloat(el.style.top);
+            el.style.setProperty("--fold-x", (clickedX - nx) + "px");
+            el.style.setProperty("--fold-y", (clickedY - ny) + "px");
+            // Remove hidden but keep it visually invisible via the animation start frame
+            el.classList.remove("node-hidden");
+            el.classList.add("node-unfolding");
+          });
+
+          state.graph.links.forEach(function (link) {
+            const isAffected = nowVisible.some(function (d) {
+              return d.key === link.from || d.key === link.to;
+            });
+            if (isAffected) {
+              link.el.classList.remove("link-hidden");
+              link.el.classList.add("link-fading-in");
+            }
+          });
+
+          rerouteLinks();
+
+          setTimeout(function () {
+            cleanupAnimations();
+            applyVisibility();   // ← moved here: final clean state after animation
+            rerouteLinks();
+            state.animating = false;
+            logEvent("toggle:done", clickedKey + " expanded");
+          }, 460);
+        }
+      }
+
+      // ── Layout & render ──────────────────────────────────────────────────────────
+
+      function buildGraph(model) {
+        nodesLayer.innerHTML = "";
+        linksSvg.innerHTML = "";
+
+        const nodes = [];
+        const links = [];
+        const nodeMap = new Map();
+        const children = new Map();
+        const collapsed = new Set();
+
+        const PROJ_GAP = 740;
+        const COL_GAP = 740;
+        const ROW_GAP = 200;
+        const TASK_GAP = 200;
+        const SUBTASK_GAP = 180;
+        const START_X = 380;   // pushed right so the project node doesn't clip the left edge
+        const START_Y = 80;
+
+        let delay = 0;
+
+        function reg(key, el) {
+          nodes.push({ key, el });
+          nodeMap.set(key, el);
+          if (!children.has(key)) children.set(key, []);
+        }
+
+        function addChild(parentKey, childKey) {
+          if (!children.has(parentKey)) children.set(parentKey, []);
+          children.get(parentKey).push(childKey);
+        }
+
+        // ── Two-pass: total height for vertical centering of project node ──────────
+        function epicHeight(epic) {
+          let h = 0;
+          epic.stories.forEach(function (s) {
+            let sh = 0;
+            s.tasks.forEach(function (t) {
+              sh += TASK_GAP + t.sub_tasks.length * SUBTASK_GAP;
+            });
+            h += Math.max(ROW_GAP, sh);
+          });
+          return Math.max(ROW_GAP, h);
+        }
+
+        let totalHeight = 0;
+        model.epics.forEach(function (epic) { totalHeight += epicHeight(epic); });
+
+        // Project node — vertically centered
+        const projKey = branchKey("project", "0");
+        const projEl = createProjectNode(
+          model.projectText, model.meta,
+          START_X,
+          START_Y + totalHeight / 2
+        );
+        reg(projKey, projEl);
+        delay += 60;
+
+        // Column x positions
+        const epicX = START_X + PROJ_GAP;
+        const storyX = epicX + COL_GAP;
+        const taskX = storyX + COL_GAP;
+
+        let epicY = START_Y;
+
+        model.epics.forEach(function (epic, ei) {
+          const eH = epicHeight(epic);
+          const epicCenterY = epicY + eH / 2;
+
+          const epicKey = branchKey("epic", String(ei));
+          const epicEl = createNode("epic", epic.title, epic.description, epicX, epicCenterY, delay, false);
+          reg(epicKey, epicEl);
+          addChild(projKey, epicKey);
+          delay += 60;
+          links.push({ from: projKey, to: epicKey, el: addLink(delay) });
+
+          let storyY = epicY;
+
+          epic.stories.forEach(function (story, si) {
+            // story height = sum of task slots
+            let storyH = 0;
+            story.tasks.forEach(function (t) {
+              storyH += TASK_GAP + t.sub_tasks.length * SUBTASK_GAP;
+            });
+            storyH = Math.max(ROW_GAP, storyH);
+
+            const storyCenterY = storyY + storyH / 2;
+            const storyKey = branchKey("story", ei + "-" + si);
+            const storyEl = createNode("story", story.title, story.description, storyX, storyCenterY, delay, false);
+            reg(storyKey, storyEl);
+            addChild(epicKey, storyKey);
+            delay += 50;
+            links.push({ from: epicKey, to: storyKey, el: addLink(delay) });
+
+            let taskY = storyY;
+
+            story.tasks.forEach(function (task, ti) {
+              const subCount = task.sub_tasks.length;
+              const taskSlotH = TASK_GAP + subCount * SUBTASK_GAP;
+              const taskCenterY = taskY + taskSlotH / 2;
+
+              const taskKey = branchKey("task", ei + "-" + si + "-" + ti);
+              const taskEl = createNode("task", task.title, task.description, taskX, taskCenterY, delay, true);
+              reg(taskKey, taskEl);
+              addChild(storyKey, taskKey);
+              delay += 40;
+              links.push({ from: storyKey, to: taskKey, el: addLink(delay) });
+
+              const subX = taskX + COL_GAP;
+              let subY = taskY;
+
+              task.sub_tasks.forEach(function (sub, sti) {
+                const subKey = branchKey("subtask", ei + "-" + si + "-" + ti + "-" + sti);
+                const subEl = createNode("subtask", sub.title, sub.description, subX, subY, delay, true);
+                reg(subKey, subEl);
+                addChild(taskKey, subKey);
+                delay += 30;
+                links.push({ from: taskKey, to: subKey, el: addLink(delay, "subtask-link") });
+                subY += SUBTASK_GAP;
+              });
+
+              taskY += taskSlotH;
+            });
+
+            storyY += storyH;
+          });
+
+          epicY += eH;
+        });
+
+        // Wire up head-click for collapse/expand
+        nodes.forEach(function (item) {
+          const headEl = item.el.querySelector(".head");
+          if (!headEl) return;
+          headEl.addEventListener("click", function (e) {
+            e.stopPropagation();
+            const now = Date.now();
+            if (
+              state.animating ||
+              (state.lastToggleKey === item.key && now - state.lastToggleAt < 600)
+            ) return;
+            state.lastToggleKey = item.key;
+            state.lastToggleAt = now;
+            animateBranchToggle(item.key, !state.graph.collapsed.has(item.key));
+          });
+        });
+
+        return { nodes, links, nodeMap, children, collapsed };
+      }
+
+      // ── Fit view ─────────────────────────────────────────────────────────────────
+
+      function fitView() {
+        if (!state.graph || !state.graph.nodes.length) return;
+        const hidden = computeHiddenSet();
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+        state.graph.nodes.forEach(function (item) {
+          if (hidden.has(item.key)) return;
+          const el = item.el;
+          const cx = parseFloat(el.style.left);
+          const cy = parseFloat(el.style.top);
+          const hw = el.offsetWidth / 2;
+          const hh = el.offsetHeight / 2;
+          minX = Math.min(minX, cx - hw);
+          minY = Math.min(minY, cy - hh);
+          maxX = Math.max(maxX, cx + hw);
+          maxY = Math.max(maxY, cy + hh);
+        });
+
+        if (!isFinite(minX)) return;
+        const pad = 60;
+        const mapW = maxX - minX + pad * 2;
+        const mapH = maxY - minY + pad * 2;
+        const vw = viewport.clientWidth;
+        const vh = viewport.clientHeight;
+
+        const targetScale = clamp(
+          Math.min(vw / mapW, vh / mapH),
+          0.12, state.fitCap
+        );
+        state.scale = targetScale;
+        state.x = -minX * targetScale + pad * targetScale + (vw - mapW * targetScale) / 2;
+        state.y = -minY * targetScale + pad * targetScale + (vh - mapH * targetScale) / 2;
+        updateTransform();
+        logEvent("fitView", "scale=" + state.scale.toFixed(3));
+      }
+
+      // ── Load data ────────────────────────────────────────────────────────────────
+
+      function loadData(json) {
+        try {
+          state.model = parseData(json);
+        } catch (err) {
+          setStatus("Error: " + err.message);
+          return;
+        }
+        state.graph = buildGraph(state.model);
+        applyVisibility();
+        requestAnimationFrame(function () {
+          rerouteLinks();
+          fitView();
+        });
+        const epicCount = state.model.epics.length;
+        setStatus(
+          "Loaded: " + state.model.projectText +
+          " | " + epicCount + " epic" + (epicCount !== 1 ? "s" : "")
+        );
+        logEvent("load", state.model.projectText + " epics=" + epicCount);
+      }
+
+      // ── Pointer / wheel events ───────────────────────────────────────────────────
+
+      viewport.addEventListener("mousedown", function (e) {
+        if (e.button === 2 || (e.button === 0 && e.shiftKey)) {
+          e.preventDefault();
+          state.zoomSelecting = true;
+          state.zoomStartX = e.clientX;
+          state.zoomStartY = e.clientY;
+          state.zoomCurrentX = e.clientX;
+          state.zoomCurrentY = e.clientY;
+          viewport.classList.add("zoom-selecting");
+          zoomBox.style.display = "block";
+          updateZoomBox();
+          return;
+        }
+        if (e.button === 0) {
+          state.dragging = true;
+          state.dragStartX = e.clientX - state.x;
+          state.dragStartY = e.clientY - state.y;
+          viewport.classList.add("dragging");
+        }
+      });
+
+      window.addEventListener("mousemove", function (e) {
+        if (state.zoomSelecting) {
+          state.zoomCurrentX = e.clientX;
+          state.zoomCurrentY = e.clientY;
+          updateZoomBox();
+          return;
+        }
+        if (state.dragging) {
+          state.x = e.clientX - state.dragStartX;
+          state.y = e.clientY - state.dragStartY;
+          updateTransform();
+        }
+      });
+
+      window.addEventListener("mouseup", function (e) {
+        if (state.zoomSelecting) {
+          state.zoomSelecting = false;
+          viewport.classList.remove("zoom-selecting");
+          zoomBox.style.display = "none";
+          finalizeZoomSelection();
+          return;
+        }
+        if (state.dragging) {
+          state.dragging = false;
+          viewport.classList.remove("dragging");
+        }
+      });
+
+      viewport.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+
+      viewport.addEventListener("wheel", function (e) {
+        e.preventDefault();
+        const rect = viewport.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const delta = e.deltaY < 0 ? 1.12 : 0.89;
+        const newScale = clamp(state.scale * delta, 0.12, state.maxZoom);
+        const ratio = newScale / state.scale;
+        state.x = mouseX - ratio * (mouseX - state.x);
+        state.y = mouseY - ratio * (mouseY - state.y);
+        state.scale = newScale;
+        updateTransform();
+      }, { passive: false });
+
+      // ── Toolbar buttons ──────────────────────────────────────────────────────────
+
+      uploadBtn.addEventListener("click", function () { fileInput.click(); });
+
+      fileInput.addEventListener("change", function () {
+        const file = fileInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          try {
+            const json = JSON.parse(ev.target.result);
+            loadData(json);
+          } catch (err) {
+            setStatus("Parse error: " + err.message);
+          }
+        };
+        reader.readAsText(file);
+        fileInput.value = "";
+      });
+
+      hiResBtn.addEventListener("click", function () {
+        state.hiRes = !state.hiRes;
+        document.body.classList.toggle("hi-res", state.hiRes);
+        hiResBtn.textContent = "Hi-Res: " + (state.hiRes ? "On" : "Off");
+        requestAnimationFrame(function () { rerouteLinks(); fitView(); });
+      });
+
+      logBtn.addEventListener("click", function () {
+        state.loggerEnabled = !state.loggerEnabled;
+        logBtn.textContent = "Logger: " + (state.loggerEnabled ? "On" : "Off");
+        loggerPanel.style.display = state.loggerEnabled ? "block" : "none";
+        if (!state.loggerEnabled) { state.logLines = []; loggerPanel.textContent = ""; }
+      });
+
+      fitBtn.addEventListener("click", fitView);
+
+      // ── Boot ─────────────────────────────────────────────────────────────────────
+
+      fetch("result.json")
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.json();
+        })
+        .then(function (json) { loadData(json); })
+        .catch(function () {
+          setStatus("No result.json found — use Load JSON File to import data.");
+        });
+
+    })();
+
+
+  </script>
+</body>
+
+</html>
